@@ -49,6 +49,56 @@ app.post('/api/transactions', async (req, res) => {
     }
 })
 
+app.get("/api/transactions/:userId", async (req, res) => {
+    try {
+        req.params.userId = req.params.userId.replace(/"/g, ''); // Remove any quotes from the userId
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+        const transactions = await sql`SELECT * FROM transactions WHERE user_id = ${userId} ORDER BY created_at DESC`;
+        if (transactions.length === 0) {
+            return res.status(404).json({ message: 'No transactions found for this user' });
+        }
+
+        res.status(200).json({
+            message: 'Transactions fetched successfully',
+            transactions: transactions
+        });
+        
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+        return res.status(500).json({ error: 'Internal server error' });        
+    }
+})
+
+app.delete('/api/transactions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id || id === "undefined") {
+            return res.status(400).json({ error: 'Transaction ID is required' });
+        }
+
+        if( isNaN(id)) {
+            return res.status(400).json({ error: 'Transaction ID must be a number' });
+        }
+
+        const result = await sql`DELETE FROM transactions WHERE id = ${id} RETURNING *`;
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        res.status(200).json({
+            message: 'Transaction deleted successfully',
+            transaction: result[0]
+        });
+
+    } catch (error) {
+        console.error('Error deleting transaction:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+})
+
 initDB().then(() => {
     app.listen(process.env.PORT || 5001, () => {
         console.log('Server is running on port', process.env.port);
