@@ -4,7 +4,10 @@ import { sql } from './config/db.js';
 
 dotenc.config();
 
+// middleware
 const app = express();
+
+app.use(express.json());
 
 async function initDB() {
     try {
@@ -25,10 +28,26 @@ async function initDB() {
 
 }
 
-app.get('/', (req, res) => {
-    res.send('Hello, Worsdlds!');
-}
-);
+app.post('/api/transactions', async (req, res) => {
+    try {
+        const { user_id, title, amount, category } = req.body;
+        if (!user_id || !title || amount === "undefined" || !category) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        const transaction = await sql`INSERT INTO transactions (user_id, title, amount, category)
+        VALUES (${user_id}, ${title}, ${amount}, ${category})
+        RETURNING *`; // Using RETURNING to get the inserted row
+        return res.status(201).json({
+            message: 'Transaction created successfully',
+            transaction: transaction[0] // Return the first (and only) row
+        });
+
+    } catch (error) {
+        console.error('Error creating transaction:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+})
 
 initDB().then(() => {
     app.listen(process.env.PORT || 5001, () => {
