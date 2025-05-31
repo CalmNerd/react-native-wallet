@@ -1,12 +1,15 @@
 import express from 'express';
 import dotenc from 'dotenv';
 import { sql } from './config/db.js';
+import e from 'express';
+import rateLimiter from './middleware/rateLimiter.js';
 
 dotenc.config();
 
-// middleware
 const app = express();
 
+// middleware
+app.use(rateLimiter);
 app.use(express.json());
 
 async function initDB() {
@@ -65,10 +68,10 @@ app.get("/api/transactions/:userId", async (req, res) => {
             message: 'Transactions fetched successfully',
             transactions: transactions
         });
-        
+
     } catch (error) {
         console.error('Error fetching transactions:', error);
-        return res.status(500).json({ error: 'Internal server error' });        
+        return res.status(500).json({ error: 'Internal server error' });
     }
 })
 
@@ -79,7 +82,7 @@ app.delete('/api/transactions/:id', async (req, res) => {
             return res.status(400).json({ error: 'Transaction ID is required' });
         }
 
-        if( isNaN(id)) {
+        if (isNaN(id)) {
             return res.status(400).json({ error: 'Transaction ID must be a number' });
         }
 
@@ -95,6 +98,48 @@ app.delete('/api/transactions/:id', async (req, res) => {
 
     } catch (error) {
         console.error('Error deleting transaction:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+})
+
+app.get("/api/transactions/summary/:userId", async (req, res) => {
+    try {
+        req.params.userId = req.params.userId.replace(/"/g, ''); // Remove any quotes from the userId
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        const balanceResult = await sql`
+            SELECT COALESCE(SUM(amount), 0) as balance
+            FROM transactions
+            WHERE user_id = ${userId}
+        `;
+
+        const incomeResult = await sql`
+            SELECT COALESCE(SUM(amount), 0) as income
+            FROM transactions
+            WHERE user_id = ${userId} AND amount > 0
+        `
+        const expensesResult = await sql`
+            SELECT COALESCE(SUM(amount), 0) as expense
+            FROM transactions
+            WHERE user_id = ${userId} AND amount < 0
+        `
+
+        if (balanceResult.length === 0) {
+            return res.status(404).json({ message: 'No transactions found for this user' });
+        }
+
+        res.status(200).json({
+            message: 'Transaction balance fetched successfully',
+            balance: balanceResult[0].balance,
+            income: incomeResult[0].income,
+            expenses: expensesResult[0].expense
+        });
+
+    } catch (error) {
+        console.error('Error fetching transaction balance:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 })
