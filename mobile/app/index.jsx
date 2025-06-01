@@ -5,10 +5,8 @@ import { Image } from "expo-image";
 export default function Index() {
   return (
     <View
-      style={styles.container}
     >
-      <Text style={{ color: "blue" }}>Edit app/index.tsx to edit this uououscreen.</Text>
-      <Link href={"/about"}>
+     <Link href={"/about"}>
         about
       </Link>
 
@@ -22,20 +20,6 @@ export default function Index() {
         source={require("../assets/images/favicon.png")}
         style={{ width: 100, height: 100 }}
       /> */}
-      <View><Text>j</Text></View>
     </View>
   );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "gray"
-  },
-  text: {
-    color: "red",
-  },
-});
