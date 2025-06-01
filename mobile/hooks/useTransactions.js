@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import {Alert} from "react-native";
 
-const API_URL = "http://localhost:5001/api";
+const API_URL = "https://react-native-wallet-99oc.onrender.com/api";
 
 export const useTransactions = (userId) => {
     const [transactions, setTransactions] = useState([]);
@@ -9,7 +9,7 @@ export const useTransactions = (userId) => {
     const [summary, setSummary] = useState({
         balance: 0,
         income: 0,
-        expenses: 0,
+        expenses: 0, //
     });
 
     //callback is used to memoize the function so that it does not change on every render
