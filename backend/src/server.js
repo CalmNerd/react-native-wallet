@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'production') job.start();
 app.use(rateLimiter);
 app.use(express.json());
 
-app.get('/', (res) => {
+app.get('/', (req, res) => {
     res.send('Expense Tracker APIs are runnnnnnnnnnning!');
 });
 
