@@ -9,11 +9,11 @@ export const SignOutButton = () => {
     try {
       await signOut()
       // Redirect to your desired page
-    //   Linking.openURL(Linking.createURL('/')) //its still navigating without using it
+    //   Linking.openURL(Linking.createURL('/')) //its still navigating without using it coz we already redirecting the route based on the auth state
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      // console.error(JSON.stringify(err, null, 2))
     }
   }
   return (
