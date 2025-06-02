@@ -1,11 +1,10 @@
 import { useCallback, useState } from "react";
 import {Alert} from "react-native";
-
-const API_URL = "https://react-native-wallet-99oc.onrender.com/api";
+import { API_URL } from "../constants/api";
 
 export const useTransactions = (userId) => {
     const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [summary, setSummary] = useState({
         balance: 0,
         income: 0,
@@ -17,9 +16,16 @@ export const useTransactions = (userId) => {
         try {
             const response = await fetch(`${API_URL}/transactions/${userId}`);
             const data = await response.json();
-            setTransactions(data);
+            
+            if (data && data.transactions && Array.isArray(data.transactions)) {
+                setTransactions(data.transactions.reverse()); // latest first
+            } else {
+                console.warn("Unexpected transaction data format:", data);
+                setTransactions([]);
+            }
         } catch (error) {
-            console.error("Error fetching transactions:", error);
+            console.error("Error fetching transactions in usetrans:", error);
+            setTransactions([]);
         }
     }, [userId]);
 
@@ -35,13 +41,13 @@ export const useTransactions = (userId) => {
 
     const loadData = useCallback(async () => {
         if (!userId) return;
-        setLoading(true);
+        setIsLoading(true);
         try {
             await Promise.all([fetchTransactions(), fetchSummary()]);
         } catch (error) {
             console.error("Error loading data:", error);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     }, [fetchTransactions, fetchSummary, userId]);
 
@@ -63,7 +69,7 @@ export const useTransactions = (userId) => {
 
     return {
         transactions,
-        loading,
+        isLoading,
         summary,
         loadData,
         deleteTransaction,
